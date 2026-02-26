@@ -1,0 +1,40 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / packaging
+*.egg-info/
+*.egg
+dist/
+sdist/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Runtime data (recreated on first run)
+data/tags.db
+data/feedback/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# PyInstaller build output (keep build/ scripts, ignore output)
+*.manifest
+*.spec.bak

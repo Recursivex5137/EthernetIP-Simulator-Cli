@@ -1,0 +1,5 @@
+# Core EthernetIP Communication Libraries
+cpppo>=4.0.0
+
+# UI Framework
+PySide6>=6.6.0
