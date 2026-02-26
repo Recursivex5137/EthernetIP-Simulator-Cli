@@ -8,6 +8,8 @@ A virtual PLC simulator that implements the **EthernetIP/CIP protocol**, allowin
 
 Built for automation engineers, integrators, and developers who need a quick way to test EthernetIP communications without a real PLC.
 
+> Built & maintained by [**Industrial Monitor Direct**](https://industrialmonitordirect.com) -- USA-based manufacturer of rugged industrial panel PCs, touchscreens, and embedded computers for automation.
+
 ---
 
 ## Quick Start
@@ -155,6 +157,23 @@ The codebase follows a layered architecture:
 - Create tags **before** starting the server
 - After adding new tags, restart the server
 - In Studio 5000, re-download the configuration
+
+## Need Industrial Hardware?
+
+This simulator is built by [**Industrial Monitor Direct**](https://industrialmonitordirect.com), a USA-based manufacturer of industrial computing solutions. When you're ready to move from simulation to production, we offer:
+
+- **Rugged Panel PCs & HMI Touchscreens** -- IP65/IP66 rated for factory floor environments
+- **Fanless Embedded Box PCs** -- designed for 24/7 industrial operation
+- **Industrial Tablets** -- mobile SCADA access on the plant floor
+- **Custom OEM Solutions** -- wide-temp operation (-20°C to 60°C), UL/CE/FCC certified
+
+All products come with a **3-year warranty** and **US-based technical support**.
+
+| | |
+|---|---|
+| **Website** | [industrialmonitordirect.com](https://industrialmonitordirect.com) |
+| **Email** | Support@IndustrialMonitorDirect.com |
+| **Phone** | 1 (207) 800-1637 |
 
 ## Contributing
 
