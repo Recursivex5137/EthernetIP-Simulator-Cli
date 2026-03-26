@@ -1,0 +1,24 @@
+services:
+  ethernetip-simulator-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ethernetip-simulator-cli:latest
+    container_name: ethernetip-simulator-cli
+    restart: unless-stopped
+    ports:
+      - "44818:44818/tcp"
+      - "44818:44818/udp"
+    volumes:
+      - ./data-docker:/data
+      - ./examples:/app/examples:ro
+    command:
+      - --db-path
+      - /data/tags.db
+      - serve
+      - --host
+      - 0.0.0.0
+      - --port
+      - "44818"
+      - --status-interval
+      - "30"

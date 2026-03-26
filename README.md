@@ -42,6 +42,44 @@ Start simulator:
 ./.venv/bin/python sim_cli.py serve --host 0.0.0.0 --port 44818
 ```
 
+## Docker Deployment
+
+Build image:
+
+```bash
+docker build -t ethernetip-simulator-cli:latest .
+```
+
+Run container:
+
+```bash
+mkdir -p data-docker
+docker run -d --name ethernetip-simulator-cli \
+  --restart unless-stopped \
+  -p 44818:44818/tcp -p 44818:44818/udp \
+  -v "$(pwd)/data-docker:/data" \
+  ethernetip-simulator-cli:latest
+```
+
+Seed tags in Docker-managed DB:
+
+```bash
+docker run --rm \
+  -v "$(pwd)/data-docker:/data" \
+  -v "$(pwd)/examples:/app/examples:ro" \
+  ethernetip-simulator-cli:latest \
+  --db-path /data/tags.db tags import --file /app/examples/tags-sample.json
+```
+
+Use `tags-sample.yaml` or `tags-sample.xml` the same way.
+
+Compose alternative:
+
+```bash
+docker compose up -d --build
+docker compose logs -f
+```
+
 ## CLI Commands
 
 ```bash
@@ -134,6 +172,8 @@ This section is roadmap only. Current deliverable remains CLI.
 
 ```text
 EthernetIP-Simulator-Cli/
+├── Dockerfile
+├── docker-compose.yml
 ├── sim_cli.py
 ├── requirements-headless.txt
 ├── deploy/
