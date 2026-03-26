@@ -1,0 +1,75 @@
+[
+  {
+    "id": "a5f1d6c2b8394d01",
+    "type": "tab",
+    "label": "Asphalt EthernetIP Polling",
+    "disabled": false,
+    "info": "Poll simulator tags every 60s via EtherNet/IP"
+  },
+  {
+    "id": "a5f1d6c2b8394d02",
+    "type": "eth-ip endpoint",
+    "address": "100.79.24.89",
+    "slot": "0",
+    "cycletime": "60000",
+    "name": "UNSEdge1 EthernetIP Sim",
+    "vartable": {
+      "": {
+        "Asphalt_GasBurner_Status": { "type": "BOOL" },
+        "Asphalt_GasBurner_TempPV": { "type": "REAL" },
+        "Asphalt_BeltMotor_Run": { "type": "BOOL" },
+        "Asphalt_BeltMotor_SpeedRPM": { "type": "REAL" },
+        "Asphalt_BeltMotor_Fault": { "type": "BOOL" }
+      }
+    }
+  },
+  {
+    "id": "a5f1d6c2b8394d03",
+    "type": "eth-ip in",
+    "z": "a5f1d6c2b8394d01",
+    "endpoint": "a5f1d6c2b8394d02",
+    "mode": "all",
+    "variable": "",
+    "program": "",
+    "name": "Asphalt Poll 60s",
+    "gatherMetrics": false,
+    "includeTimestamp": true,
+    "addErrorOutput": false,
+    "outputs": 1,
+    "x": 230,
+    "y": 160,
+    "wires": [["a5f1d6c2b8394d04"]]
+  },
+  {
+    "id": "a5f1d6c2b8394d04",
+    "type": "function",
+    "z": "a5f1d6c2b8394d01",
+    "name": "Format Asphalt Snapshot",
+    "func": "const p = msg.payload || {};\nmsg.topic = \"asphalt/telemetry\";\nmsg.payload = {\n  ts: new Date().toISOString(),\n  gas_burner: {\n    status: p.Asphalt_GasBurner_Status,\n    temp_c: p.Asphalt_GasBurner_TempPV\n  },\n  belt_motor: {\n    run: p.Asphalt_BeltMotor_Run,\n    speed_rpm: p.Asphalt_BeltMotor_SpeedRPM,\n    fault: p.Asphalt_BeltMotor_Fault\n  }\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 510,
+    "y": 160,
+    "wires": [["a5f1d6c2b8394d05"]]
+  },
+  {
+    "id": "a5f1d6c2b8394d05",
+    "type": "debug",
+    "z": "a5f1d6c2b8394d01",
+    "name": "Asphalt 60s Snapshot",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 780,
+    "y": 160,
+    "wires": []
+  }
+]

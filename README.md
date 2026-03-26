@@ -72,6 +72,7 @@ docker run --rm \
 ```
 
 Use `tags-sample.yaml` or `tags-sample.xml` the same way.
+For asphalt demo tags, use `examples/tags-asphalt-plant.json`.
 
 Compose alternative:
 
@@ -168,6 +169,24 @@ Planned (not implemented):
 
 This section is roadmap only. Current deliverable remains CLI.
 
+## Node-RED Example
+
+This repo includes a Node-RED flow export for a 60-second asphalt polling demo:
+- `examples/node-red-flow-asphalt-60s.json`
+
+Flow behavior:
+- Polls over EtherNet/IP every 60 seconds
+- Reads:
+  - `Asphalt_GasBurner_Status`
+  - `Asphalt_GasBurner_TempPV`
+  - `Asphalt_BeltMotor_Run`
+  - `Asphalt_BeltMotor_SpeedRPM`
+  - `Asphalt_BeltMotor_Fault`
+- Emits formatted telemetry on topic `asphalt/telemetry`
+
+Required Node-RED palette package:
+- `node-red-contrib-cip-ethernet-ip`
+
 ## Project Layout
 
 ```text
@@ -182,7 +201,9 @@ EthernetIP-Simulator-Cli/
 ├── examples/
 │   ├── tags-sample.json
 │   ├── tags-sample.yaml
-│   └── tags-sample.xml
+│   ├── tags-asphalt-plant.json
+│   ├── tags-sample.xml
+│   └── node-red-flow-asphalt-60s.json
 └── src/
 ```
 

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Asphalt_GasBurner_Status",
+    "type": "BOOL",
+    "value": true,
+    "description": "Gas burner online status"
+  },
+  {
+    "name": "Asphalt_GasBurner_TempPV",
+    "type": "REAL",
+    "value": 315.2,
+    "description": "Gas burner process temp (C)"
+  },
+  {
+    "name": "Asphalt_BeltMotor_Run",
+    "type": "BOOL",
+    "value": true,
+    "description": "Belt motor running state"
+  },
+  {
+    "name": "Asphalt_BeltMotor_SpeedRPM",
+    "type": "REAL",
+    "value": 872.5,
+    "description": "Belt motor speed (RPM)"
+  },
+  {
+    "name": "Asphalt_BeltMotor_Fault",
+    "type": "BOOL",
+    "value": false,
+    "description": "Belt motor fault state"
+  }
+]
