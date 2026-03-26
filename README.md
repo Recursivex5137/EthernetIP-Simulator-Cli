@@ -1,113 +1,86 @@
-# EthernetIP Simulator
+# EthernetIP Simulator CLI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://www.python.org/)
-[![PySide6](https://img.shields.io/badge/UI-PySide6%20(Qt6)-orange.svg)](https://doc.qt.io/qtforpython/)
+[![Mode-CLI%20Only-orange](https://img.shields.io/badge/Mode-CLI%20Only-orange)](#current-direction)
 
-A virtual PLC simulator that implements the **EthernetIP/CIP protocol**, allowing **Studio 5000**, **RSLogix**, and other SCADA systems to connect for testing and development -- **no physical hardware required**.
+CLI-first EthernetIP/CIP virtual PLC simulator for edge/lab network testing.
 
-Built for automation engineers, integrators, and developers who need a quick way to test EthernetIP communications without a real PLC.
+This repository is a fork of the upstream simulator with a different direction:
+- Headless CLI operation is the primary product.
+- TUI is a future aspiration, not implemented yet.
+- GUI workflows are not the focus of this fork.
 
-> Built & maintained by [**Industrial Monitor Direct**](https://industrialmonitordirect.com) -- USA-based manufacturer of rugged industrial panel PCs, touchscreens, and embedded computers for automation.
+## Current Direction
 
----
+Current state:
+- Supported: CLI (`sim_cli.py`)
+- Not shipped yet: TUI
+- Legacy code still exists from upstream, but this fork targets CLI deployment and automation.
 
 ## Quick Start
 
-**Option A -- Run from source:**
-
 ```bash
-git clone https://github.com/imdtouch/EthernetIP-Simulator.git
-cd EthernetIP-Simulator
-python main.py
+git clone git@github.com:Recursivex5137/EthernetIP-Simulator-Cli.git
+cd EthernetIP-Simulator-Cli
+./deploy/setup-headless.sh
 ```
 
-Dependencies install automatically on first run. If that fails, run `pip install -r requirements.txt` manually.
-
-**Option B -- Run the pre-built executable (Windows):**
-
-Download `EthernetIP_Simulator.exe` from this repository and run it directly. No Python installation needed.
-
-**Option C -- Run headless CLI mode (Linux/edge nodes):**
+Optional seed:
 
 ```bash
-git clone https://github.com/imdtouch/EthernetIP-Simulator.git
-cd EthernetIP-Simulator
-python -m pip install -r requirements-headless.txt
-
-# Seed tags (optional)
-python sim_cli.py tags import --file examples/tags-sample.json
-
-# Run simulator on all interfaces (EthernetIP default port 44818)
-python sim_cli.py serve --host 0.0.0.0 --port 44818
+./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.json
 ```
 
----
-
-## Features
-
-- **Virtual PLC Server** -- Simulates an EthernetIP device on port 44818 that accepts connections from SCADA software
-- **Tag Management** -- Create, edit, and delete tags with inline editing, undo/redo, and context menus
-- **All Standard Data Types** -- BOOL, SINT, INT, DINT, LINT, USINT, UINT, UDINT, REAL, LREAL, STRING
-- **Arrays** -- Single and multi-dimensional array support
-- **User Defined Types (UDTs)** -- Define complex data structures with custom members
-- **Modern Dark UI** -- Built with PySide6 (Qt6) with a dark industrial theme
-- **Persistent Storage** -- Tags persist between sessions via SQLite
-- **Auto-Install** -- Dependencies are installed automatically on first run
-
-## Requirements
-
-- **Python 3.8+** (not needed if using the `.exe`)
-- **Windows 10/11** (recommended) or Linux
-- Internet connection for initial dependency installation
-- **Headless mode** only needs `cpppo` (`requirements-headless.txt`)
-
-## CLI Mode (Headless)
-
-Use the CLI when running on servers/edge devices without a desktop UI.
-
-### Tag management
+Start simulator:
 
 ```bash
+./.venv/bin/python sim_cli.py serve --host 0.0.0.0 --port 44818
+```
+
+## CLI Commands
+
+```bash
+# Help
+python sim_cli.py --help
+python sim_cli.py tags --help
+
 # List tags
 python sim_cli.py tags list
 
 # Add scalar tag
 python sim_cli.py tags add --name BatchCount --type DINT --value 0
 
-# Add array tag (JSON list value)
+# Add array tag
 python sim_cli.py tags add --name BeanPercentages --type REAL --array-dim 3 --value "[40.0,35.0,25.0]"
 
-# Update existing tag value
+# Update existing tag
 python sim_cli.py tags set --name BatchCount --value 42
 
 # Delete tag
 python sim_cli.py tags delete --name BatchCount
+
+# Import tag definitions
+python sim_cli.py tags import --file examples/tags-sample.json
 ```
 
-### Start/stop headless simulator
+## Serve Mode
 
 ```bash
-# Start with periodic status logs every 10s
 python sim_cli.py serve --host 0.0.0.0 --port 44818 --status-interval 10
-
-# Ctrl+C to stop; live values are snapshotted back into SQLite before shutdown
 ```
 
-### Edge node quick setup (unsedge1/unspi style)
+Behavior:
+- Foreground process (Ctrl+C to stop)
+- Live tag values are snapshotted back to SQLite at shutdown
+- Uses default DB path `data/tags.db` unless `--db-path` is provided
 
-```bash
-# From repo root
-./deploy/setup-headless.sh
+## Systemd Deployment
 
-# Optional: preload example tags
-./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.json
+Service template:
+- `deploy/ethernetip-simulator-cli.service`
 
-# Run server
-./.venv/bin/python sim_cli.py serve --host 0.0.0.0 --port 44818
-```
-
-### Run as a systemd service
+Typical install:
 
 ```bash
 sudo mkdir -p /var/lib/ethernetip-simulator
@@ -117,17 +90,15 @@ sudo systemctl enable --now ethernetip-simulator-cli
 sudo systemctl status ethernetip-simulator-cli --no-pager
 ```
 
-Edit `deploy/ethernetip-simulator-cli.service` first so `User`, `Group`, and `WorkingDirectory` match your device.
+Edit `User`, `Group`, and `WorkingDirectory` in the service file before enabling it.
 
-### Tag import JSON format
+## Tag Import Format
 
-`sim_cli.py tags import --file tags.json` accepts either:
-
+`sim_cli.py tags import --file tags.json` accepts:
 1. A top-level JSON list of tag objects, or
-2. An object containing a `tags` list.
+2. A JSON object with a `tags` list.
 
 Each tag object supports:
-
 - `name` (required)
 - `type` or `data_type` (required, e.g. `BOOL`, `DINT`, `REAL`, `STRING`)
 - `value` (optional)
@@ -136,165 +107,30 @@ Each tag object supports:
 - `is_array` (optional, bool)
 - `udt_type_id` (optional, for UDT tags)
 
-## How to Use
+## TUI Roadmap (Aspirational)
 
-### 1. Create Tags
+Planned (not implemented):
+- Live tag table in terminal
+- Interactive tag edit workflow
+- Server status panel
+- Read/write activity stream
 
-1. Click **"Add Tag"** in the Tag Management panel
-2. Set the tag name, data type, and optional initial value
-3. Click **"Create Tag"**
+This section is roadmap only. Current deliverable remains CLI.
 
-Tag names must start with a letter or underscore and contain only alphanumeric characters and underscores (standard PLC naming rules).
+## Project Layout
 
-### 2. Start the Server
-
-1. Click **"Start Server"** in the Server Control panel
-2. The status indicator turns green when the server is running
-3. Note the IP address and port (default: **44818**)
-
-### 3. Connect from Studio 5000 / RSLogix
-
-1. Open your Studio 5000 project
-2. In **I/O Configuration**, add a new **Ethernet Module**
-3. Set the **IP Address** to the one shown in the simulator's Server Control panel
-4. Set **Port** to `44818` and **Slot** to `0`
-5. Download to the PLC and browse **Controller Tags** -- your simulator tags will appear
-6. You can now read and write tag values between Studio 5000 and the simulator
-
-### Editing Tags
-
-- **Double-click** a value cell to edit inline
-- **BOOL tags** toggle on double-click
-- **Ctrl+Z** / **Ctrl+Y** to undo/redo value changes
-- **Right-click** for context menu (Copy Name, Copy Value, Delete)
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+Q | Exit application |
-| F12 | Capture screenshot & submit feedback |
-| Ctrl+Z | Undo tag value edit |
-| Ctrl+Y | Redo tag value edit |
-
-## Supported Data Types
-
-| Type | Description | Range / Size |
-|--------|---------------------------|--------------------------------------|
-| BOOL | Boolean | True / False |
-| SINT | Short Integer (8-bit) | -128 to 127 |
-| INT | Integer (16-bit) | -32,768 to 32,767 |
-| DINT | Double Integer (32-bit) | -2,147,483,648 to 2,147,483,647 |
-| LINT | Long Integer (64-bit) | 64-bit signed |
-| USINT | Unsigned Short Integer | 0 to 255 |
-| UINT | Unsigned Integer | 0 to 65,535 |
-| UDINT | Unsigned Double Integer | 0 to 4,294,967,295 |
-| REAL | 32-bit Float | IEEE 754 single precision |
-| LREAL | 64-bit Float | IEEE 754 double precision |
-| STRING | Character String | Up to 82 characters |
-
-## Project Structure
-
+```text
+EthernetIP-Simulator-Cli/
+├── sim_cli.py
+├── requirements-headless.txt
+├── deploy/
+│   ├── setup-headless.sh
+│   └── ethernetip-simulator-cli.service
+├── examples/
+│   └── tags-sample.json
+└── src/
 ```
-EthernetIP-Simulator/
-├── main.py                       # Entry point (auto-installs dependencies)
-├── sim_cli.py                    # Headless CLI entry point
-├── requirements.txt              # Python dependencies
-├── requirements-headless.txt     # Headless-only dependencies
-├── EthernetIP_Simulator.exe      # Pre-built Windows executable
-├── examples/tags-sample.json     # Example seed tags for CLI mode
-│
-├── src/
-│   ├── models/                   # Data models (Tag, UDT, DataType)
-│   ├── database/                 # SQLite persistence (thread-safe)
-│   ├── services/                 # Business logic with caching
-│   ├── server/                   # EthernetIP/CIP server (cpppo)
-│   ├── ui/                       # PySide6 interface & dialogs
-│   └── feedback/                 # Screenshot annotation system
-│
-├── build/                        # PyInstaller build scripts
-├── deploy/                       # Headless setup + systemd service template
-└── data/                         # Runtime data (created automatically)
-```
-
-## Architecture
-
-The codebase follows a layered architecture:
-
-| Layer | Responsibility |
-|------------|--------------------------------------------------------|
-| **Models** | Data structures (Tag, UDT, DataType enums) |
-| **Database** | SQLite persistence with thread-safe, lock-protected cursors |
-| **Services** | Business logic with O(1) cached tag lookups |
-| **Server** | EthernetIP/CIP communication via cpppo (thread-safe) |
-| **UI** | PySide6 dark-themed interface |
-
-## Troubleshooting
-
-### Application won't start
-- Verify Python 3.8+ is installed: `python --version`
-- Try manual dependency install: `pip install -r requirements.txt`
-
-### Server won't start
-- Check if port 44818 is already in use by another application
-- Verify your firewall allows traffic on port 44818
-- On Windows, see `WINDOWS_SOCKET_GUIDE.md` for port management tips
-
-### Studio 5000 can't connect
-- Confirm the server status shows "Running" (green indicator)
-- Make sure the IP address in Studio 5000 matches what the simulator displays
-- If testing on the same machine, try `127.0.0.1`
-- Check that both machines are on the same network
-
-### Tags not appearing in Studio 5000
-- Create tags **before** starting the server
-- After adding new tags, restart the server
-- In Studio 5000, re-download the configuration
-
-## Need Industrial Hardware?
-
-This simulator is built by [**Industrial Monitor Direct**](https://industrialmonitordirect.com), a USA-based manufacturer of industrial computing solutions. When you're ready to move from simulation to production, we offer:
-
-- **Rugged Panel PCs & HMI Touchscreens** -- IP65/IP66 rated for factory floor environments
-- **Fanless Embedded Box PCs** -- designed for 24/7 industrial operation
-- **Industrial Tablets** -- mobile SCADA access on the plant floor
-- **Custom OEM Solutions** -- wide-temp operation (-20°C to 60°C), UL/CE/FCC certified
-
-All products come with a **3-year warranty** and **US-based technical support**.
-
-| | |
-|---|---|
-| **Website** | [industrialmonitordirect.com](https://industrialmonitordirect.com) |
-| **Email** | Support@IndustrialMonitorDirect.com |
-| **Phone** | 1 (207) 800-1637 |
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m "Add my feature"`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
-
-For bugs or feature requests, please [open an issue](../../issues).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
-## Version History
-
-### v2.0.0 (Current)
-- Complete UI rewrite from CustomTkinter to PySide6 (Qt6)
-- Dark industrial theme with sortable, resizable columns
-- Right-click context menus and inline tag value editing
-- Undo/redo support (Ctrl+Z / Ctrl+Y)
-- F12 screenshot annotation and feedback system
-- Thread-safe database and server operations
-- O(1) tag lookup via secondary cache index
-- Removed 6 unused dependencies for a leaner install
-
-### v1.0.0
-- Initial release with EthernetIP server, tag management, array support, and CustomTkinter UI
+MIT License. See [LICENSE](LICENSE).
