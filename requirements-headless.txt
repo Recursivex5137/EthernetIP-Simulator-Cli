@@ -1,2 +1,3 @@
 # Headless CLI/runtime dependencies
 cpppo>=4.0.0
+PyYAML>=6.0

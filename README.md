@@ -30,6 +30,10 @@ Optional seed:
 
 ```bash
 ./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.json
+# or
+./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.yaml
+# or
+./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.xml
 ```
 
 Start simulator:
@@ -62,6 +66,8 @@ python sim_cli.py tags delete --name BatchCount
 
 # Import tag definitions
 python sim_cli.py tags import --file examples/tags-sample.json
+python sim_cli.py tags import --file examples/tags-sample.yaml
+python sim_cli.py tags import --file examples/tags-sample.xml
 ```
 
 ## Serve Mode
@@ -94,9 +100,10 @@ Edit `User`, `Group`, and `WorkingDirectory` in the service file before enabling
 
 ## Tag Import Format
 
-`sim_cli.py tags import --file tags.json` accepts:
-1. A top-level JSON list of tag objects, or
-2. A JSON object with a `tags` list.
+`sim_cli.py tags import --file <file>` supports:
+1. `JSON` (`.json`): top-level list, or object with `tags` list
+2. `YAML` (`.yaml` / `.yml`): top-level list, or object with `tags` list
+3. `XML` (`.xml`): root `<tags>` containing `<tag>` entries
 
 Each tag object supports:
 - `name` (required)
@@ -106,6 +113,12 @@ Each tag object supports:
 - `array_dimensions` (optional, list of positive integers)
 - `is_array` (optional, bool)
 - `udt_type_id` (optional, for UDT tags)
+
+For XML:
+- Array dimensions can be provided as nested elements:
+  `<array_dimensions><dim>3</dim></array_dimensions>`
+- Array values can be provided as nested items:
+  `<value><item>40.0</item><item>35.0</item></value>`
 
 ## TUI Roadmap (Aspirational)
 
@@ -127,7 +140,9 @@ EthernetIP-Simulator-Cli/
 │   ├── setup-headless.sh
 │   └── ethernetip-simulator-cli.service
 ├── examples/
-│   └── tags-sample.json
+│   ├── tags-sample.json
+│   ├── tags-sample.yaml
+│   └── tags-sample.xml
 └── src/
 ```
 

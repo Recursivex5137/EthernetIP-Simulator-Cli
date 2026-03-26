@@ -1,0 +1,39 @@
+<tags>
+  <tag>
+    <name>MachineReady</name>
+    <type>BOOL</type>
+    <value>true</value>
+    <description>Machine ready status</description>
+  </tag>
+  <tag>
+    <name>BatchCount</name>
+    <type>DINT</type>
+    <value>0</value>
+    <description>Number of completed batches</description>
+  </tag>
+  <tag>
+    <name>RoastTemp</name>
+    <type>REAL</type>
+    <value>186.5</value>
+    <description>Current roast temperature C</description>
+  </tag>
+  <tag>
+    <name>BlendName</name>
+    <type>STRING</type>
+    <value>EdgeDemoBlend</value>
+    <description>Active blend label</description>
+  </tag>
+  <tag>
+    <name>BeanPercentages</name>
+    <type>REAL</type>
+    <array_dimensions>
+      <dim>3</dim>
+    </array_dimensions>
+    <value>
+      <item>40.0</item>
+      <item>35.0</item>
+      <item>25.0</item>
+    </value>
+    <description>Three-bean blend percentages</description>
+  </tag>
+</tags>

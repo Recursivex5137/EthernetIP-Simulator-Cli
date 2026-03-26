@@ -10,6 +10,7 @@ import signal
 import sys
 import threading
 import time
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
@@ -177,13 +178,121 @@ def serialize_tag(tag: Any) -> dict[str, Any]:
     }
 
 
-def load_tag_specs(path: Path) -> list[dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+def _normalize_tag_specs(payload: Any, source: str) -> list[dict[str, Any]]:
     if isinstance(payload, list):
-        return payload
-    if isinstance(payload, dict) and isinstance(payload.get("tags"), list):
-        return payload["tags"]
-    raise ValueError("Tag file must be a JSON array or an object with a 'tags' list")
+        specs = payload
+    elif isinstance(payload, dict) and isinstance(payload.get("tags"), list):
+        specs = payload["tags"]
+    else:
+        raise ValueError(
+            f"Unsupported {source} structure. Expected a top-level list "
+            "or an object with a 'tags' list."
+        )
+
+    for i, spec in enumerate(specs, start=1):
+        if not isinstance(spec, dict):
+            raise ValueError(f"Invalid tag spec at position {i}: expected object/dict")
+    return specs
+
+
+def _parse_text_value(text: Optional[str]) -> Any:
+    if text is None:
+        return None
+    value = text.strip()
+    if value == "":
+        return ""
+    lower = value.lower()
+    if lower in {"true", "yes", "on"}:
+        return True
+    if lower in {"false", "no", "off"}:
+        return False
+
+    # JSON-first parsing handles numbers, quoted strings, lists, and objects.
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback to plain string.
+    return value
+
+
+def _load_json_tag_specs(path: Path) -> list[dict[str, Any]]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return _normalize_tag_specs(payload, "JSON")
+
+
+def _load_yaml_tag_specs(path: Path) -> list[dict[str, Any]]:
+    try:
+        import yaml  # type: ignore
+    except ImportError as exc:
+        raise ValueError(
+            "YAML import requires PyYAML. Install with: pip install PyYAML"
+        ) from exc
+
+    payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return _normalize_tag_specs(payload, "YAML")
+
+
+def _load_xml_tag_specs(path: Path) -> list[dict[str, Any]]:
+    root = ET.fromstring(path.read_text(encoding="utf-8"))
+    if root.tag.lower() != "tags":
+        raise ValueError("XML root element must be <tags>")
+
+    specs: list[dict[str, Any]] = []
+    for tag_node in root.findall("tag"):
+        spec: dict[str, Any] = {}
+        for field in list(tag_node):
+            key = field.tag.strip()
+            key_lower = key.lower()
+
+            if key_lower in {"array_dimensions", "dimensions"}:
+                if list(field):
+                    spec["array_dimensions"] = [
+                        int(_parse_text_value(item.text)) for item in list(field)
+                    ]
+                else:
+                    parsed = _parse_text_value(field.text)
+                    if isinstance(parsed, list):
+                        spec["array_dimensions"] = [int(x) for x in parsed]
+                    elif isinstance(parsed, str):
+                        values = [v.strip() for v in parsed.split(",") if v.strip()]
+                        spec["array_dimensions"] = [int(v) for v in values]
+                continue
+
+            if key_lower == "value":
+                if list(field):
+                    spec["value"] = [_parse_text_value(item.text) for item in list(field)]
+                else:
+                    spec["value"] = _parse_text_value(field.text)
+                continue
+
+            if key_lower == "is_array":
+                spec["is_array"] = parse_bool(_parse_text_value(field.text))
+                continue
+
+            if key_lower == "udt_type_id":
+                raw = _parse_text_value(field.text)
+                if raw in (None, ""):
+                    spec["udt_type_id"] = None
+                else:
+                    spec["udt_type_id"] = int(raw)
+                continue
+
+            spec[key] = (field.text or "").strip()
+
+        specs.append(spec)
+
+    return _normalize_tag_specs(specs, "XML")
+
+
+def load_tag_specs(path: Path) -> list[dict[str, Any]]:
+    suffix = path.suffix.lower()
+    if suffix == ".xml":
+        return _load_xml_tag_specs(path)
+    if suffix in {".yaml", ".yml"}:
+        return _load_yaml_tag_specs(path)
+    return _load_json_tag_specs(path)
 
 
 def apply_tag_spec(
@@ -559,8 +668,12 @@ def build_parser() -> argparse.ArgumentParser:
     tags_delete.add_argument("--name", required=True, help="Tag name")
     tags_delete.set_defaults(func=cmd_tags_delete)
 
-    tags_import = tags_sub.add_parser("import", help="Import tags from JSON")
-    tags_import.add_argument("--file", required=True, help="Path to JSON file")
+    tags_import = tags_sub.add_parser("import", help="Import tags from JSON/YAML/XML")
+    tags_import.add_argument(
+        "--file",
+        required=True,
+        help="Path to .json, .yaml/.yml, or .xml tag file",
+    )
     tags_import.add_argument(
         "--replace-existing",
         action="store_true",
