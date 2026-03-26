@@ -1,0 +1,33 @@
+[
+  {
+    "name": "MachineReady",
+    "type": "BOOL",
+    "value": true,
+    "description": "Machine ready status"
+  },
+  {
+    "name": "BatchCount",
+    "type": "DINT",
+    "value": 0,
+    "description": "Number of completed batches"
+  },
+  {
+    "name": "RoastTemp",
+    "type": "REAL",
+    "value": 186.5,
+    "description": "Current roast temperature C"
+  },
+  {
+    "name": "BlendName",
+    "type": "STRING",
+    "value": "EdgeDemoBlend",
+    "description": "Active blend label"
+  },
+  {
+    "name": "BeanPercentages",
+    "type": "REAL",
+    "array_dimensions": [3],
+    "value": [40.0, 35.0, 25.0],
+    "description": "Three-bean blend percentages"
+  }
+]

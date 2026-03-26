@@ -28,6 +28,20 @@ Dependencies install automatically on first run. If that fails, run `pip install
 
 Download `EthernetIP_Simulator.exe` from this repository and run it directly. No Python installation needed.
 
+**Option C -- Run headless CLI mode (Linux/edge nodes):**
+
+```bash
+git clone https://github.com/imdtouch/EthernetIP-Simulator.git
+cd EthernetIP-Simulator
+python -m pip install -r requirements-headless.txt
+
+# Seed tags (optional)
+python sim_cli.py tags import --file examples/tags-sample.json
+
+# Run simulator on all interfaces (EthernetIP default port 44818)
+python sim_cli.py serve --host 0.0.0.0 --port 44818
+```
+
 ---
 
 ## Features
@@ -46,6 +60,81 @@ Download `EthernetIP_Simulator.exe` from this repository and run it directly. No
 - **Python 3.8+** (not needed if using the `.exe`)
 - **Windows 10/11** (recommended) or Linux
 - Internet connection for initial dependency installation
+- **Headless mode** only needs `cpppo` (`requirements-headless.txt`)
+
+## CLI Mode (Headless)
+
+Use the CLI when running on servers/edge devices without a desktop UI.
+
+### Tag management
+
+```bash
+# List tags
+python sim_cli.py tags list
+
+# Add scalar tag
+python sim_cli.py tags add --name BatchCount --type DINT --value 0
+
+# Add array tag (JSON list value)
+python sim_cli.py tags add --name BeanPercentages --type REAL --array-dim 3 --value "[40.0,35.0,25.0]"
+
+# Update existing tag value
+python sim_cli.py tags set --name BatchCount --value 42
+
+# Delete tag
+python sim_cli.py tags delete --name BatchCount
+```
+
+### Start/stop headless simulator
+
+```bash
+# Start with periodic status logs every 10s
+python sim_cli.py serve --host 0.0.0.0 --port 44818 --status-interval 10
+
+# Ctrl+C to stop; live values are snapshotted back into SQLite before shutdown
+```
+
+### Edge node quick setup (unsedge1/unspi style)
+
+```bash
+# From repo root
+./deploy/setup-headless.sh
+
+# Optional: preload example tags
+./.venv/bin/python sim_cli.py tags import --file examples/tags-sample.json
+
+# Run server
+./.venv/bin/python sim_cli.py serve --host 0.0.0.0 --port 44818
+```
+
+### Run as a systemd service
+
+```bash
+sudo mkdir -p /var/lib/ethernetip-simulator
+sudo cp deploy/ethernetip-simulator-cli.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now ethernetip-simulator-cli
+sudo systemctl status ethernetip-simulator-cli --no-pager
+```
+
+Edit `deploy/ethernetip-simulator-cli.service` first so `User`, `Group`, and `WorkingDirectory` match your device.
+
+### Tag import JSON format
+
+`sim_cli.py tags import --file tags.json` accepts either:
+
+1. A top-level JSON list of tag objects, or
+2. An object containing a `tags` list.
+
+Each tag object supports:
+
+- `name` (required)
+- `type` or `data_type` (required, e.g. `BOOL`, `DINT`, `REAL`, `STRING`)
+- `value` (optional)
+- `description` (optional)
+- `array_dimensions` (optional, list of positive integers)
+- `is_array` (optional, bool)
+- `udt_type_id` (optional, for UDT tags)
 
 ## How to Use
 
@@ -109,8 +198,11 @@ Tag names must start with a letter or underscore and contain only alphanumeric c
 ```
 EthernetIP-Simulator/
 ├── main.py                       # Entry point (auto-installs dependencies)
+├── sim_cli.py                    # Headless CLI entry point
 ├── requirements.txt              # Python dependencies
+├── requirements-headless.txt     # Headless-only dependencies
 ├── EthernetIP_Simulator.exe      # Pre-built Windows executable
+├── examples/tags-sample.json     # Example seed tags for CLI mode
 │
 ├── src/
 │   ├── models/                   # Data models (Tag, UDT, DataType)
@@ -121,6 +213,7 @@ EthernetIP-Simulator/
 │   └── feedback/                 # Screenshot annotation system
 │
 ├── build/                        # PyInstaller build scripts
+├── deploy/                       # Headless setup + systemd service template
 └── data/                         # Runtime data (created automatically)
 ```
 

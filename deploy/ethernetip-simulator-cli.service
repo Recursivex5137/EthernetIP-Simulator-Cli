@@ -1,0 +1,23 @@
+[Unit]
+Description=EthernetIP Simulator (Headless CLI)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Adjust user/group to your edge account.
+User=pi
+Group=pi
+
+# Adjust to your deployed repo location.
+WorkingDirectory=/opt/edge-demo/EthernetIP-Simulator
+
+# Use local venv installed by deploy/setup-headless.sh.
+ExecStart=/opt/edge-demo/EthernetIP-Simulator/.venv/bin/python sim_cli.py --db-path /var/lib/ethernetip-simulator/tags.db serve --host 0.0.0.0 --port 44818 --status-interval 30
+
+Restart=on-failure
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2 @@
+# Headless CLI/runtime dependencies
+cpppo>=4.0.0
